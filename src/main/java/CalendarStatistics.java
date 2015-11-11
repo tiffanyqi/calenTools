@@ -80,6 +80,16 @@ public class CalendarStatistics {
 	}
 
 	/**
+	 * Converts milliseconds to hours.
+	 * @input long (milliseconds)
+	 * @return double (hours)
+	 */
+	public double milliToHours(long milliseconds) {
+		double hours = (milliseconds / 1000) / 60 / 60;
+		return hours;
+	}
+
+	/**
 	 * Build and return an authorized Calendar client service.
 	 * @return an authorized Calendar client service
 	 * @throws IOException
@@ -99,7 +109,7 @@ public class CalendarStatistics {
 		//   com.google.api.services.calendar.model.Calendar class.
 		com.google.api.services.calendar.Calendar service =
 			getCalendarService();
-		HashMap<String, List<Event>> calendarToHour = new HashMap<>();
+		HashMap<String, Double> calendarToHour = new HashMap<>();
 		DateTime now = new DateTime(System.currentTimeMillis());
 
 		// Summarize the hours within each calendar
@@ -113,6 +123,8 @@ public class CalendarStatistics {
 			// iterates through all the calendars
 			for (CalendarListEntry calendarListEntry : items) {
 				if (!calendarListEntry.isPrimary()) {
+					
+					// sets a list of events from a particular calendar
 					Events events = service.events().list(calendarListEntry.getId())
 						.setMaxResults(3)
 						.setTimeMin(now)
@@ -120,16 +132,25 @@ public class CalendarStatistics {
 						.setSingleEvents(true)
 						.execute();
 					List<Event> calendarItems = events.getItems();
-					long count = 0;
+					
+					// adds up all the durations from a particular calendar
+					double count = 0;
 					for (Event e : calendarItems) {
-						// long duration = e.getEnd().getValue() - e.getStart().getValue();
-						// System.out.println(e.getStart().getDateTime());
+						long start = e.getStart().getDateTime().getValue();
+						long end = e.getEnd().getDateTime().getValue();
+						double duration = ((double) end - start) / 1000 / 60 / 60;
+						count += duration;
 					}
-					calendarToHour.put(calendarListEntry.getSummary(), calendarItems);
+					calendarToHour.put(calendarListEntry.getSummary(), count);
 				}
 			}
 			pageToken = calendarList.getNextPageToken();
 		} while (pageToken != null);
+
+		// prints out the summary
+		for (String calendar : calendarToHour.keySet()) {
+			System.out.println(calendar + ": " + calendarToHour.get(calendar));
+		}
 	}
 
 }
