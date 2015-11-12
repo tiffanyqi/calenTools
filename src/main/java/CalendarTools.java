@@ -24,7 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.HashMap;
 
-public class CalendarStatistics {
+public class CalendarTools {
 	/** Application name. */
 	private static final String APPLICATION_NAME =
 		"Summary of Hours Spent From Your Calendar";
@@ -65,7 +65,7 @@ public class CalendarStatistics {
 	public static Credential authorize() throws IOException {
 		// Load client secrets.
 		InputStream in =
-			CalendarStatistics.class.getResourceAsStream("/client_secret.json");
+			CalendarTools.class.getResourceAsStream("/client_secret.json");
 		GoogleClientSecrets clientSecrets =
 			GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
 
@@ -143,6 +143,8 @@ public class CalendarStatistics {
                         List<Event> calendarItems = events.getItems();
                     
                         // adds up all the durations from a particular calendar
+
+                        // resolve double bookings here
                         double count = 0;
                         for (Event e : calendarItems) {
                             long start = e.getStart().getDateTime().getValue();
