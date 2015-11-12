@@ -16,6 +16,10 @@ import com.google.api.services.calendar.model.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
+import java.util.Date;
 import java.util.Arrays;
 import java.util.List;
 import java.util.HashMap;
@@ -113,37 +117,47 @@ public class CalendarStatistics {
 		DateTime now = new DateTime(System.currentTimeMillis());
 
 		// Summarize the hours within each calendar
-		System.out.println("----Starting Summary!-----");
+		System.out.println("---- Here is Your Summary of the Past Week! -----");
 
 		String pageToken = null;
 		do {
 			CalendarList calendarList = service.calendarList().list().setPageToken(pageToken).execute();
 			List<CalendarListEntry> items = calendarList.getItems();
+			try {
+                // creates the date at the beginning of the week
+				SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+				Date d = sdf.parse("08/11/2015");
+				DateTime dateBegWeek = new DateTime(d);
+                
+                // iterates through all the calendars
+                for (CalendarListEntry calendarListEntry : items) {
+                    if (!calendarListEntry.isPrimary()) {
+                        
+                        // sets a list of events from a particular calendar
+                        Events events = service.events().list(calendarListEntry.getId())
+                            .setTimeMin(dateBegWeek)
+                            .setTimeMax(now)
+                            .setOrderBy("startTime")
+                            .setSingleEvents(true)
+                            .execute();
+                        List<Event> calendarItems = events.getItems();
+                    
+                        // adds up all the durations from a particular calendar
+                        double count = 0;
+                        for (Event e : calendarItems) {
+                            long start = e.getStart().getDateTime().getValue();
+    						long end = e.getEnd().getDateTime().getValue();
+    						double duration = ((double) end - start) / 1000 / 60 / 60;
+    						count += duration;
+    					}
+    					calendarToHour.put(calendarListEntry.getSummary(), count);
+    				}
+    			}
 
-			// iterates through all the calendars
-			for (CalendarListEntry calendarListEntry : items) {
-				if (!calendarListEntry.isPrimary()) {
-					
-					// sets a list of events from a particular calendar
-					Events events = service.events().list(calendarListEntry.getId())
-						.setMaxResults(3)
-						.setTimeMin(now)
-						.setOrderBy("startTime")
-						.setSingleEvents(true)
-						.execute();
-					List<Event> calendarItems = events.getItems();
-					
-					// adds up all the durations from a particular calendar
-					double count = 0;
-					for (Event e : calendarItems) {
-						long start = e.getStart().getDateTime().getValue();
-						long end = e.getEnd().getDateTime().getValue();
-						double duration = ((double) end - start) / 1000 / 60 / 60;
-						count += duration;
-					}
-					calendarToHour.put(calendarListEntry.getSummary(), count);
-				}
-			}
+            } catch(ParseException pe) {
+                System.out.println("Cannot parse date");
+            }
+            
 			pageToken = calendarList.getNextPageToken();
 		} while (pageToken != null);
 
