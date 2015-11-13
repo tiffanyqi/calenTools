@@ -1,4 +1,4 @@
-# Calendar-Tools
+# calenTools
 
 Purpose: run many tools on your list of calendars on Google Calendar from the command line.
 
@@ -18,7 +18,7 @@ Written in Java, uses Gradle utilizes Google API
 - Make sure you have gradle installed (brew install gradle)
 - Make sure you have Java 1.7 (or higher) installed
 - Cd into the repo
-- $ gradle -q run!
+- $ gradle -q run
 	- The first time you run the program, it will open up a new window (or copy and paste the link given) so that you can either enter in your information
 
 ## Future additions:

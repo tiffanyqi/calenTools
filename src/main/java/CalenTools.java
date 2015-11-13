@@ -19,12 +19,13 @@ import java.io.InputStreamReader;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
-import java.util.Date;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
-public class CalendarTools {
+public class CalenTools {
 	/** Application name. */
 	private static final String APPLICATION_NAME =
 		"Summary of Hours Spent From Your Calendar";
@@ -65,7 +66,7 @@ public class CalendarTools {
 	public static Credential authorize() throws IOException {
 		// Load client secrets.
 		InputStream in =
-			CalendarTools.class.getResourceAsStream("/client_secret.json");
+			CalenTools.class.getResourceAsStream("/client_secret.json");
 		GoogleClientSecrets clientSecrets =
 			GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
 
@@ -81,16 +82,6 @@ public class CalendarTools {
 		System.out.println(
 				"Credentials saved to " + DATA_STORE_DIR.getAbsolutePath());
 		return credential;
-	}
-
-	/**
-	 * Converts milliseconds to hours.
-	 * @input long (milliseconds)
-	 * @return double (hours)
-	 */
-	public double milliToHours(long milliseconds) {
-		double hours = (milliseconds / 1000) / 60 / 60;
-		return hours;
 	}
 
 	/**
@@ -115,9 +106,7 @@ public class CalendarTools {
 			getCalendarService();
 		HashMap<String, Double> calendarToHour = new HashMap<>();
 		DateTime now = new DateTime(System.currentTimeMillis());
-
-		// Summarize the hours within each calendar
-		System.out.println("---- Here is Your Summary of the Past Week! -----");
+        Date current = new Date(now.getValue());
 
 		String pageToken = null;
 		do {
@@ -126,7 +115,7 @@ public class CalendarTools {
 			try {
                 // creates the date at the beginning of the week
 				SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-				Date d = sdf.parse("08/11/2015");
+				Date d = sdf.parse("08/11/2015"); // be able to set a time here
 				DateTime dateBegWeek = new DateTime(d);
                 
                 // iterates through all the calendars
@@ -142,19 +131,33 @@ public class CalendarTools {
                             .execute();
                         List<Event> calendarItems = events.getItems();
                     
-                        // adds up all the durations from a particular calendar
-
-                        // resolve double bookings here
-                        double count = 0;
+                        double totalCalTime = 0;
                         for (Event e : calendarItems) {
+                            
+                            // adds up all the durations from a particular calendar
                             long start = e.getStart().getDateTime().getValue();
     						long end = e.getEnd().getDateTime().getValue();
-    						double duration = ((double) end - start) / 1000 / 60 / 60;
-    						count += duration;
+    						double eventDuration = ((double) end - start) / 1000 / 60 / 60;
+    						totalCalTime += eventDuration;
     					}
-    					calendarToHour.put(calendarListEntry.getSummary(), count);
+    					calendarToHour.put(calendarListEntry.getSummary(), totalCalTime);
     				}
     			}
+
+                        // Summarize the hours within each calendar
+                        System.out.println("---- Here is Your Summary of the Past Week! ----");
+                        for (String calendar : calendarToHour.keySet()) {
+                            System.out.println(calendar + ": " + calendarToHour.get(calendar));
+                        }
+
+                        // Summarize the hours within a particular calendar
+                        System.out.println("---- Here is the Summary for {0} of the Past Week! ----");
+                        for (String calendar : calendarToHour.keySet()) {
+                            // later implement calendar checking
+                            if (calendar.equals("Sleep")) {
+                                System.out.println(calendarToHour.get(calendar) + " hours spent last week starting " + d.toString() + " to " + current.toString() + " on " + calendar);
+                            }
+                        }
 
             } catch(ParseException pe) {
                 System.out.println("Cannot parse date");
@@ -162,11 +165,6 @@ public class CalendarTools {
             
 			pageToken = calendarList.getNextPageToken();
 		} while (pageToken != null);
-
-		// prints out the summary
-		for (String calendar : calendarToHour.keySet()) {
-			System.out.println(calendar + ": " + calendarToHour.get(calendar));
-		}
 	}
 
 }

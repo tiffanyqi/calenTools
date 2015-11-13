@@ -1,7 +1,7 @@
 apply plugin: 'java'
 apply plugin: 'application'
 
-mainClassName = 'CalendarTools'
+mainClassName = 'CalenTools'
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
 version = '1.0'
@@ -15,4 +15,8 @@ dependencies {
     compile 'com.google.oauth-client:google-oauth-client-jetty:1.20.0'
     compile 'com.google.apis:google-api-services-calendar:v3-rev125-1.20.0'
     
+}
+
+task showArgs << {
+	println "$word1 $word2"
 }
