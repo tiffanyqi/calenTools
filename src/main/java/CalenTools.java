@@ -106,7 +106,7 @@ public class CalenTools {
      * @input  a 2d string array of possible contained names
      * @return treemap, a mapping of category title to possible contained names
      */
-    private HashMap<String, HashSet<String>> addCategories(String[] categories, String[][] contains) {
+    public HashMap<String, HashSet<String>> addCategories(String[] categories, String[][] contains) {
         if (categories.length != contains.length) {
             System.out.println("Please check your two inputs! Lengths are not equal.");
             return null;
@@ -118,6 +118,18 @@ public class CalenTools {
             }
             return cat;
         }
+    }
+
+    /**
+     * Converts a Date object into MM DD.
+     * @input  Date object
+     * @return String that looks like MM DD
+     */
+    public String dateToMonthDay(Date d) {
+        String date = d.toString();
+        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd");
+        String monthDay = sdf.format(d);
+        return monthDay;
     }
 
     // Instantiates a new class, CalenTools
@@ -133,6 +145,7 @@ public class CalenTools {
         TreeMap<String, Double> calendarToHour = new TreeMap<>();
         HashMap<String, HashSet<String>> miscCategories; //
 		DateTime now = new DateTime(System.currentTimeMillis());
+        long startTime = now.getValue();
         Date current = new Date(now.getValue());
 
         // adds various categories to miscCategories
@@ -146,8 +159,8 @@ public class CalenTools {
 			List<CalendarListEntry> items = calendarList.getItems();
 			try {
                 // creates the date at the beginning of the week
-				SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-				Date d = sdf.parse("08/11/2015"); // be able to set a time here
+				SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyy");
+				Date d = sdf.parse("11/08/2015"); // be able to set a time here
 				DateTime dateBegWeek = new DateTime(d);
 
                 // adds miscellaneous categories to the calendar map
@@ -204,11 +217,11 @@ public class CalenTools {
                 }
 
                 // Summarize the hours within a particular calendar
-                System.out.println("---- Here is the Summary for {0} of the Past Week! ----");
+                System.out.println("---- Here is the Summary for Sleep from the Past Week! ----");
                 for (String calendar : calendarToHour.keySet()) {
                     // later implement calendar checking
                     if (calendar.equals("Sleep")) {
-                        System.out.println(calendarToHour.get(calendar) + " hours spent last week starting " + d.toString() + " to " + current.toString() + " on " + calendar);
+                        System.out.println(calendarToHour.get(calendar) + " hours spent last week starting " + calentools.dateToMonthDay(d) + " to " + calentools.dateToMonthDay(current) + " on " + calendar);
                     }
                 }
 
@@ -218,6 +231,10 @@ public class CalenTools {
             
             pageToken = calendarList.getNextPageToken();
         } while (pageToken != null);
-	}
+
+    long endTime = System.currentTimeMillis();
+    System.out.println("***This program runs for " + String.valueOf((endTime - startTime) / 1000.0) + " seconds.****");
+
+    }
 
 }
