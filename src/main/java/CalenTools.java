@@ -141,15 +141,20 @@ public class CalenTools {
 		//   com.google.api.services.calendar.model.Calendar class.
 		com.google.api.services.calendar.Calendar service =
 			getCalendarService();
+
+        // sets up the application
         CalenTools calentools = new CalenTools();
-        TreeMap<String, Double> calendarToHour = new TreeMap<>();
-        HashMap<String, HashSet<String>> miscCategories; //
-		DateTime now = new DateTime(System.currentTimeMillis());
+        TreeMap<String, Double> calendarToHour = new TreeMap<>(); // a mapping of calendar name to time spent
+        TreeMap<String, Double> categoryToHour = new TreeMap<>(); // a mapping of category name to time spent
+        HashMap<String, HashSet<String>> miscCategories; // a mapping from category name to what it contains
+		
+        DateTime now = new DateTime(System.currentTimeMillis());
         long startTime = now.getValue();
         Date current = new Date(now.getValue());
+        int eventCount = 0;
 
         // adds various categories to miscCategories
-        String[] c1 = new String[]{"*CS 160", "*EE 375", "*IEOR 186", "*UGBA 103", "*UGBA 107", "*UGBA 167", "**CSM", "**CS 61A TA", "**Projects"};
+        String[] c1 = new String[]{"CS 160", "EE 375", "IEOR 186", "UGBA 103", "UGBA 107", "UGBA 167", "CSM", "CS 61A TA", "Projects"};
         String[][] c2 = new String[][]{{"160"}, {"375"}, {"IEOR", "ieor", "186"}, {"103", "finance"}, {"107", "ethics"}, {"167"}, {"csm", "CSM"}, {"61a", "staff", "TA"}, {"calendar", "hack", "project"}};
         miscCategories = calentools.addCategories(c1, c2);
 		
@@ -160,12 +165,12 @@ public class CalenTools {
 			try {
                 // creates the date at the beginning of the week
 				SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyy");
-				Date d = sdf.parse("11/08/2015"); // be able to set a time here
+				Date d = sdf.parse("11/8/2015"); // be able to set a time here
 				DateTime dateBegWeek = new DateTime(d);
 
                 // adds miscellaneous categories to the calendar map
                 for (String cat : miscCategories.keySet()) {
-                    calendarToHour.put(cat, 0.0);
+                    categoryToHour.put(cat, 0.0);
                 }
                 
                 // iterates through all the calendars
@@ -191,39 +196,53 @@ public class CalenTools {
     						calendarTime += eventDuration;
 
                             // if the event title is in one of the set categories, add it as well
-                            for (String calendar : calendarToHour.keySet()) {
-                                if (e.getSummary() != null) {
-                                    if (calendar.charAt(0) == '*') {
-                                        // go through the contained information in misc categories, add if in there
-                                        for (String contained : miscCategories.get(calendar)) {
-                                            if (e.getSummary().contains( (CharSequence) contained)) {
-                                                calendarToHour.put(calendar, calendarToHour.get(calendar) + eventDuration);
-                                            }
+                            if (e.getSummary() != null) {
+                                for (String cat : categoryToHour.keySet()) {
+                                    for (String contained : miscCategories.get(cat)) {
+                                        if (e.getSummary().contains( (CharSequence) contained)) {
+                                            categoryToHour.put(cat, categoryToHour.get(cat) + eventDuration);
                                         }
-
                                     }
                                 }
                             }
-
+                            eventCount += 1;
     					}
     					calendarToHour.put(calendarListEntry.getSummary(), calendarTime);
     				}
     			}
 
                 // Summarize the hours within each calendar
-                System.out.println("---- Here is Your Summary of the Past Week! ----");
+                System.out.println("---- Here is Your Calendar Summary of the Past Week! ----");
                 for (String calendar : calendarToHour.keySet()) {
                     System.out.println(calendar + ": " + calendarToHour.get(calendar));
                 }
+                System.out.println("");
 
-                // Summarize the hours within a particular calendar
-                System.out.println("---- Here is the Summary for Sleep from the Past Week! ----");
-                for (String calendar : calendarToHour.keySet()) {
-                    // later implement calendar checking
-                    if (calendar.equals("Sleep")) {
-                        System.out.println(calendarToHour.get(calendar) + " hours spent last week starting " + calentools.dateToMonthDay(d) + " to " + calentools.dateToMonthDay(current) + " on " + calendar);
-                    }
+                // Summarize the hours within new categories given by the user
+                System.out.println("---- Here is Your Category Summary of the Past Week! ----");
+                for (String cat : categoryToHour.keySet()) {
+                    System.out.println(cat + ": " + categoryToHour.get(cat));
                 }
+                System.out.println("");
+
+                // // Summarize the hours within a particular calendar
+                // System.out.println("---- Here is the Summary for Sleep from the Past Week! ----");
+                // for (String calendar : calendarToHour.keySet()) {
+                //     // later implement calendar checking
+                //     if (calendar.equals("Sleep")) {
+                //         System.out.println(calendarToHour.get(calendar) + " hours spent last week starting " + calentools.dateToMonthDay(d) + " to " + calentools.dateToMonthDay(current) + " on " + calendar);
+                //     }
+                // }
+                // System.out.println("");
+
+                // Displays how long it took for the program to run
+                System.out.println("---- Here is Some Statistics about the Program! ----");
+                long endTime = System.currentTimeMillis();
+                double totalTime = (double) (endTime - startTime) / 1000.0; // add decimals afterwards
+                int rate = (int) (eventCount / totalTime);
+                System.out.println("Was " + totalTime + " seconds.");
+                System.out.println("Counted " + eventCount + " events.");
+                System.out.println("That's ~" + rate + " events per second.");
 
             } catch(ParseException pe) {
                 System.out.println("Cannot parse date");
@@ -232,8 +251,6 @@ public class CalenTools {
             pageToken = calendarList.getNextPageToken();
         } while (pageToken != null);
 
-    long endTime = System.currentTimeMillis();
-    System.out.println("***This program runs for " + String.valueOf((endTime - startTime) / 1000.0) + " seconds.****");
 
     }
 
