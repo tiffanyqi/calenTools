@@ -21,6 +21,13 @@ Written in Java, uses Gradle utilizes Google API
 - $ gradle -q run
 	- The first time you run the program, it will open up a new window (or copy and paste the link given) so that you can either enter in your information
 
+## Web application interface:
+- About the project
+- Sync your calendars!
+- Select which calendars to include / categories to add
+- View graphs
+- Start again (goes back to step 3)
+
 ## Future additions:
 - Modifying and adding events to the calendar on the command line
 - Calculate overall productivity with the statistics generated
@@ -28,7 +35,8 @@ Written in Java, uses Gradle utilizes Google API
 - Predicting future productivity
 - Save information into a CSV
 - Transfer as a website
+- Create a RescueTime like interface that prompts users about what they've doing, and adds it to their Google Calendar
 
 ## Notes:
 - This tool ignores all primary calendar events.
-- Any all-day event can cause the script to error. You can change it so that the event shows up on the primary calendar instead of that individual calendar
+- Any all-day event can cause the script to error. You can change it so that the event shows up on the primary calendar instead of that individual calendar.
