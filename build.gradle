@@ -16,7 +16,3 @@ dependencies {
     compile 'com.google.apis:google-api-services-calendar:v3-rev125-1.20.0'
     
 }
-
-task showArgs << {
-	println "$word1 $word2"
-}

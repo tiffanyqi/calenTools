@@ -150,13 +150,15 @@ public class CalenTools {
 		
         DateTime now = new DateTime(System.currentTimeMillis());
         long startTime = now.getValue();
-        Date current = new Date(now.getValue());
+        // Date current = new Date(now.getValue());
         int eventCount = 0;
 
         // adds various categories to miscCategories
-        String[] c1 = new String[]{"CS 160", "EE 375", "IEOR 186", "UGBA 103", "UGBA 107", "UGBA 167", "CSM", "CS 61A TA", "Projects"};
-        String[][] c2 = new String[][]{{"160"}, {"375"}, {"IEOR", "ieor", "186"}, {"103", "finance"}, {"107", "ethics"}, {"167"}, {"csm", "CSM"}, {"61a", "staff", "TA"}, {"calendar", "hack", "project"}};
-        miscCategories = calentools.addCategories(c1, c2);
+        String[] cat1 = new String[]{"CS 160", "EE 375", "IEOR 186", "UGBA 103", "UGBA 107", "UGBA 167", "CSM", "CS 61A TA", "Projects"};
+        String[][] cat2 = new String[][]{{"160"}, {"375"}, {"IEOR", "ieor", "186"}, {"103", "finance"}, {"107", "ethics"}, {"167"}, {"csm", "CSM"}, {"61a", "staff", "TA"}, {"calendar", "hack", "project"}};
+        // String[][] cat1 = new String[][]{{"Homework"}, {"Homework & Studying"}, { {"CS 160", "160"}, {"EE 375", "375"}, {"IEOR 186", "ieor, IEOR, 186"}, {"UGBA 103", "103, finance"}, {"UGBA 107", "107, ethics"}, {"UGBA 167", "167, branding"}};
+        // String[][] cat2 = new String[][]{{"Projects"}, {"Jobs, Internships & Activities"}, { {"CSM", "csm, CSM, exec"}, {"CS 61A TA", "61a, staff"}, {"Projects", "calendar, hack, project"}}};
+        miscCategories = calentools.addCategories(cat1, cat2);
 		
         String pageToken = null;
 		do {
@@ -165,8 +167,11 @@ public class CalenTools {
 			try {
                 // creates the date at the beginning of the week
 				SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyy");
-				Date d = sdf.parse("11/8/2015"); // be able to set a time here
-				DateTime dateBegWeek = new DateTime(d);
+				Date dBegin = sdf.parse("11/8/2015"); // be able to set a time here
+				DateTime dateBegWeek = new DateTime(dBegin);
+
+                Date dEnd = sdf.parse("11/15/2015");
+                DateTime dateEndWeek = new DateTime(dEnd);
 
                 // adds miscellaneous categories to the calendar map
                 for (String cat : miscCategories.keySet()) {
@@ -180,7 +185,7 @@ public class CalenTools {
                         // sets a list of events from a particular calendar
                         Events events = service.events().list(calendarListEntry.getId())
                             .setTimeMin(dateBegWeek)
-                            .setTimeMax(now)
+                            .setTimeMax(dateEndWeek)
                             .setOrderBy("startTime")
                             .setSingleEvents(true)
                             .execute();
