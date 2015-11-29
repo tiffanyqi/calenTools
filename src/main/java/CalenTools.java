@@ -132,131 +132,129 @@ public class CalenTools {
         return monthDay;
     }
 
+    /** 
+     * Sets the date
+     * @input takes in a string parsed from "MM/DD/YYY"
+     * @return DateTime object from string
+     */
+    public DateTime setDate(String date) {
+        DateTime datetime = null;
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyy");
+            Date d = sdf.parse(date);
+            datetime = new DateTime(d);
+        } catch (ParseException pe) {
+            System.out.println("Cannot parse date");
+        }
+        return datetime;
+    }
+
+    // change these variables to modify program
+    private String dateStart = "11/22/2015";
+    private String dateEnd = "11/29/2015";
+
+    private String[] cat1 = 
+            new String[]{"CS 160", "EE 375", "IEOR 186", "UGBA 103", "UGBA 107", "UGBA 167", 
+                         "CSM", "CS 61A TA", "Projects", "Spiral Knights"};
+    private String[][] cat2 = 
+            new String[][]{{"160"}, {"375"}, {"IEOR", "ieor", "186"}, {"103", "finance"}, {"107", "ethics"}, {"167"}, 
+                           {"csm", "CSM"}, {"61a", "staff"}, {"calendar", "hack", "project"}, {"spiral", "Spiral"}};
+    // private String[][] cat1 = 
+    //         new String[][]{{"Homework"}, {"Homework & Studying"}, 
+    //                        { {"CS 160", "160"}, {"EE 375", "375"}, {"IEOR 186", "ieor, IEOR, 186"}, 
+    //                        {"UGBA 103", "103, finance"}, {"UGBA 107", "107, ethics"}, {"UGBA 167", "167, branding"}};
+    // private String[][] cat2 = 
+    //         new String[][]{{"Projects"}, {"Jobs, Internships & Activities"}, 
+    //                        { {"CSM", "csm, CSM, exec"}, {"CS 61A TA", "61a, staff"}, {"Projects", "calendar, hack, project"}}};
+    
     // Instantiates a new class, CalenTools
     public CalenTools() { }
 
-	public static void main(String[] args) throws IOException {
-		// Build a new authorized API client service.
-		// Note: Do not confuse this class with the
-		//   com.google.api.services.calendar.model.Calendar class.
-		com.google.api.services.calendar.Calendar service =
-			getCalendarService();
+    public static void main(String[] args) throws IOException {
+        // Build a new authorized API client service. Not the calendar.model.Calendar class.
+        com.google.api.services.calendar.Calendar service =
+            getCalendarService();
 
         // sets up the application
         CalenTools calentools = new CalenTools();
-        TreeMap<String, Double> calendarToHour = new TreeMap<>(); // a mapping of calendar name to time spent
-        TreeMap<String, Double> categoryToHour = new TreeMap<>(); // a mapping of category name to time spent
+        TreeMap<String, Double> calendarToHour = new TreeMap<>();
+        TreeMap<String, Double> categoryToHour = new TreeMap<>();
         HashMap<String, HashSet<String>> miscCategories; // a mapping from category name to what it contains
-		
+        
         DateTime now = new DateTime(System.currentTimeMillis());
         long startTime = now.getValue();
-        // Date current = new Date(now.getValue());
         int eventCount = 0;
-
-        // adds various categories to miscCategories
-        String[] cat1 = new String[]{"CS 160", "EE 375", "IEOR 186", "UGBA 103", "UGBA 107", "UGBA 167", "CSM", "CS 61A TA", "Projects"};
-        String[][] cat2 = new String[][]{{"160"}, {"375"}, {"IEOR", "ieor", "186"}, {"103", "finance"}, {"107", "ethics"}, {"167"}, {"csm", "CSM"}, {"61a", "staff", "TA"}, {"calendar", "hack", "project"}};
-        // String[][] cat1 = new String[][]{{"Homework"}, {"Homework & Studying"}, { {"CS 160", "160"}, {"EE 375", "375"}, {"IEOR 186", "ieor, IEOR, 186"}, {"UGBA 103", "103, finance"}, {"UGBA 107", "107, ethics"}, {"UGBA 167", "167, branding"}};
-        // String[][] cat2 = new String[][]{{"Projects"}, {"Jobs, Internships & Activities"}, { {"CSM", "csm, CSM, exec"}, {"CS 61A TA", "61a, staff"}, {"Projects", "calendar, hack, project"}}};
-        miscCategories = calentools.addCategories(cat1, cat2);
+        miscCategories = calentools.addCategories(calentools.cat1, calentools.cat2);
 		
         String pageToken = null;
 		do {
 			CalendarList calendarList = service.calendarList().list().setPageToken(pageToken).execute();
 			List<CalendarListEntry> items = calendarList.getItems();
-			try {
-                // creates the date at the beginning of the week
-				SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyy");
-				Date dBegin = sdf.parse("11/8/2015"); // be able to set a time here
-				DateTime dateBegWeek = new DateTime(dBegin);
 
-                Date dEnd = sdf.parse("11/15/2015");
-                DateTime dateEndWeek = new DateTime(dEnd);
+            // adds miscellaneous categories to the calendar map
+            for (String cat : miscCategories.keySet()) {
+                categoryToHour.put(cat, 0.0);
+            }
+            
+            // iterates through all the calendars
+            for (CalendarListEntry calendarListEntry : items) {
+                if (!calendarListEntry.isPrimary()) {
+                    
+                    // sets a list of events from a particular calendar
+                    Events events = service.events().list(calendarListEntry.getId())
+                        .setTimeMin(calentools.setDate(calentools.dateStart))
+                        .setTimeMax(calentools.setDate(calentools.dateEnd))
+                        .setOrderBy("startTime")
+                        .setSingleEvents(true)
+                        .execute();
+                    List<Event> calendarItems = events.getItems();
+                    
+                    double calendarTime = 0; // total amount of time in the calendar
+                    double categoryTime = 0; // total amount of tine in a category
+                    for (Event e : calendarItems) {
+                        // adds up all the durations from events
+                        long start = e.getStart().getDateTime().getValue();
+						long end = e.getEnd().getDateTime().getValue();
+						double eventDuration = ((double) end - start) / 1000 / 60 / 60;
+						calendarTime += eventDuration;
 
-                // adds miscellaneous categories to the calendar map
-                for (String cat : miscCategories.keySet()) {
-                    categoryToHour.put(cat, 0.0);
-                }
-                
-                // iterates through all the calendars
-                for (CalendarListEntry calendarListEntry : items) {
-                    if (!calendarListEntry.isPrimary()) {
-                        
-                        // sets a list of events from a particular calendar
-                        Events events = service.events().list(calendarListEntry.getId())
-                            .setTimeMin(dateBegWeek)
-                            .setTimeMax(dateEndWeek)
-                            .setOrderBy("startTime")
-                            .setSingleEvents(true)
-                            .execute();
-                        List<Event> calendarItems = events.getItems();
-                        
-                        double calendarTime = 0; // total amount of time in the calendar
-                        double categoryTime = 0; // total amount of tine in a category
-                        for (Event e : calendarItems) {
-                            // adds up all the durations from events
-                            long start = e.getStart().getDateTime().getValue();
-    						long end = e.getEnd().getDateTime().getValue();
-    						double eventDuration = ((double) end - start) / 1000 / 60 / 60;
-    						calendarTime += eventDuration;
-
-                            // if the event title is in one of the set categories, add it as well
-                            if (e.getSummary() != null) {
-                                for (String cat : categoryToHour.keySet()) {
-                                    for (String contained : miscCategories.get(cat)) {
-                                        if (e.getSummary().contains( (CharSequence) contained)) {
-                                            categoryToHour.put(cat, categoryToHour.get(cat) + eventDuration);
-                                        }
+                        // if the event title is in one of the set categories, add it as well
+                        if (e.getSummary() != null) {
+                            for (String cat : categoryToHour.keySet()) {
+                                for (String contained : miscCategories.get(cat)) {
+                                    if (e.getSummary().contains( (CharSequence) contained)) {
+                                        categoryToHour.put(cat, categoryToHour.get(cat) + eventDuration);
                                     }
                                 }
                             }
-                            eventCount += 1;
-    					}
-    					calendarToHour.put(calendarListEntry.getSummary(), calendarTime);
-    				}
-    			}
+                        } eventCount += 1;
+					} calendarToHour.put(calendarListEntry.getSummary(), calendarTime);
+				}
+			}
 
-                // Summarize the hours within each calendar
-                System.out.println("---- Here is Your Calendar Summary of the Past Week! ----");
-                for (String calendar : calendarToHour.keySet()) {
-                    System.out.println(calendar + ": " + calendarToHour.get(calendar));
-                }
-                System.out.println("");
+            // Summarize the hours within each calendar
+            System.out.println("---- Here is Your Calendar Summary of the Past Week! ----");
+            for (String calendar : calendarToHour.keySet()) {
+                System.out.println(calendar + ": " + calendarToHour.get(calendar));
+            } System.out.println("");
 
-                // Summarize the hours within new categories given by the user
-                System.out.println("---- Here is Your Category Summary of the Past Week! ----");
-                for (String cat : categoryToHour.keySet()) {
-                    System.out.println(cat + ": " + categoryToHour.get(cat));
-                }
-                System.out.println("");
+            // Summarize the hours within new categories given by the user
+            System.out.println("---- Here is Your Category Summary of the Past Week! ----");
+            for (String cat : categoryToHour.keySet()) {
+                System.out.println(cat + ": " + categoryToHour.get(cat));
+            } System.out.println("");
 
-                // // Summarize the hours within a particular calendar
-                // System.out.println("---- Here is the Summary for Sleep from the Past Week! ----");
-                // for (String calendar : calendarToHour.keySet()) {
-                //     // later implement calendar checking
-                //     if (calendar.equals("Sleep")) {
-                //         System.out.println(calendarToHour.get(calendar) + " hours spent last week starting " + calentools.dateToMonthDay(d) + " to " + calentools.dateToMonthDay(current) + " on " + calendar);
-                //     }
-                // }
-                // System.out.println("");
-
-                // Displays how long it took for the program to run
-                System.out.println("---- Here is Some Statistics about the Program! ----");
-                long endTime = System.currentTimeMillis();
-                double totalTime = (double) (endTime - startTime) / 1000.0; // add decimals afterwards
-                int rate = (int) (eventCount / totalTime);
-                System.out.println("Was " + totalTime + " seconds.");
-                System.out.println("Counted " + eventCount + " events.");
-                System.out.println("That's ~" + rate + " events per second.");
-
-            } catch(ParseException pe) {
-                System.out.println("Cannot parse date");
-            }
+            // Displays how long it took for the program to run
+            System.out.println("---- Here is Some Statistics about the Program! ----");
+            long endTime = System.currentTimeMillis();
+            double totalTime = (double) (endTime - startTime) / 1000.0;
+            int rate = (int) (eventCount / totalTime);
+            System.out.println("Was " + totalTime + " seconds.");
+            System.out.println("Counted " + eventCount + " events.");
+            System.out.println("That's ~" + rate + " events per second.");
             
             pageToken = calendarList.getNextPageToken();
+
         } while (pageToken != null);
-
-
     }
-
 }
