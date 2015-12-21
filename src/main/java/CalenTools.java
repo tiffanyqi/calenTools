@@ -150,15 +150,13 @@ public class CalenTools {
     }
 
     // change these variables to modify program
-    private String dateStart = "11/22/2015";
-    private String dateEnd = "11/29/2015";
+    private String dateStart = "12/20/2015";
+    private String dateEnd = "12/27/2015";
 
     private String[] cat1 = 
-            new String[]{"CS 160", "EE 375", "IEOR 186", "UGBA 103", "UGBA 107", "UGBA 167", 
-                         "CSM", "CS 61A TA", "Projects", "Spiral Knights"};
+            new String[]{"CSM", "Projects", "Hearthstone"};
     private String[][] cat2 = 
-            new String[][]{{"160"}, {"375"}, {"IEOR", "ieor", "186"}, {"103", "finance"}, {"107", "ethics"}, {"167"}, 
-                           {"csm", "CSM"}, {"61a", "staff"}, {"calendar", "hack", "project"}, {"spiral", "Spiral"}};
+            new String[][]{{"csm", "CSM"}, {"calendar", "hack", "project", "tq", "software", "productivity"}, {"hs"}};
     // private String[][] cat1 = 
     //         new String[][]{{"Homework"}, {"Homework & Studying"}, 
     //                        { {"CS 160", "160"}, {"EE 375", "375"}, {"IEOR 186", "ieor, IEOR, 186"}, 
