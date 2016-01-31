@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 import java.util.Arrays;
@@ -149,14 +150,31 @@ public class CalenTools {
         return datetime;
     }
 
+    // 
+    public String totalsCalendars(String[] calendars, TreeMap<String, Double> map) {
+        double sum = 0;
+        for (String calendar : calendars) {
+            if (map.containsKey(calendar)) {
+                sum += map.get(calendar);
+            }
+        }
+        String productivity = new DecimalFormat("##.##").format(sum / 168 * 100);
+
+        return productivity;
+    }
+
     // change these variables to modify program
-    private String dateStart = "12/20/2015";
-    private String dateEnd = "12/27/2015";
+    private String dateStart = "1/24/2016";
+    private String dateEnd = "1/31/2016";
+
+    private String wantedCalendars[] = new String[]{"Class", "Homework & Studying", "Job Searching", "Jobs, Internships, & Activities"};
 
     private String[] cat1 = 
-            new String[]{"CSM", "Projects", "Hearthstone"};
+            new String[]{"CS 169", "Geog 130", "UGBA 101A", "UGBA 102B", "UGBA 155",
+                         "CSM", "Projects", "Languages"};
     private String[][] cat2 = 
-            new String[][]{{"csm", "CSM"}, {"calendar", "hack", "project", "tq", "software", "productivity"}, {"hs"}};
+            new String[][]{{"169"}, {"geog", "130"}, {"101a", "micro", "econ"}, {"102b", "accounting"}, {"155", "leadership"},
+                           {"csm", "CSM"}, {"calendar", "hack", "project", "tq", "software", "productivity"}, {"french", "spanish", "language", "duolingo"}};
     // private String[][] cat1 = 
     //         new String[][]{{"Homework"}, {"Homework & Studying"}, 
     //                        { {"CS 160", "160"}, {"EE 375", "375"}, {"IEOR 186", "ieor, IEOR, 186"}, 
@@ -231,16 +249,23 @@ public class CalenTools {
 			}
 
             // Summarize the hours within each calendar
-            System.out.println("---- Here is Your Calendar Summary of the Past Week! ----");
+            System.out.println("---- Here is Your Calendar Summary of Week " + calentools.dateStart + "-" + calentools.dateEnd + "! ----");
             for (String calendar : calendarToHour.keySet()) {
-                System.out.println(calendar + ": " + calendarToHour.get(calendar));
+                String productivity = new DecimalFormat("##.##").format(calendarToHour.get(calendar) / 168 * 100);
+                System.out.println(calendar + ": " + calendarToHour.get(calendar) + " | " + productivity + "%");
             } System.out.println("");
 
             // Summarize the hours within new categories given by the user
             System.out.println("---- Here is Your Category Summary of the Past Week! ----");
             for (String cat : categoryToHour.keySet()) {
-                System.out.println(cat + ": " + categoryToHour.get(cat));
+                String productivity = new DecimalFormat("##.##").format(categoryToHour.get(cat) / 168 * 100);
+                System.out.println(cat + ": " + categoryToHour.get(cat) + " | " + productivity + "%");
             } System.out.println("");
+
+            // Summarizes producitivity
+            System.out.println("---- Here is Your Total Productivity Figures of the Past Week! ----");
+            System.out.println("Total Productivity Percentage: " + calentools.totalsCalendars(calentools.wantedCalendars, calendarToHour) + "%");
+            System.out.println("");
 
             // Displays how long it took for the program to run
             System.out.println("---- Here is Some Statistics about the Program! ----");
