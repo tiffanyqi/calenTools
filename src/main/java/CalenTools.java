@@ -82,8 +82,8 @@ public class CalenTools {
 				.build();
 		Credential credential = new AuthorizationCodeInstalledApp(
 			flow, new LocalServerReceiver()).authorize("user");
-		System.out.println(
-				"Credentials saved to " + DATA_STORE_DIR.getAbsolutePath());
+		// System.out.println(
+		// 		"Credentials saved to " + DATA_STORE_DIR.getAbsolutePath());
 		return credential;
 	}
 
@@ -150,6 +150,16 @@ public class CalenTools {
         return datetime;
     }
 
+    /**
+     * Generate the write number of spaces based on the length of a name
+     * @input int ideal number of spaces, string length of the name
+     * @return a new string with the ideal number of spaces
+     * source: http://stackoverflow.com/questions/1235179/simple-way-to-repeat-a-string-in-java
+     */
+    public String generateSpaces(int numCharacters, String name) {
+        return new String(new char[numCharacters-name.length()]).replace("\0", " ");
+    }
+
     // 
     public String totalsCalendars(String[] calendars, TreeMap<String, Double> map) {
         double sum = 0;
@@ -159,29 +169,15 @@ public class CalenTools {
             }
         }
         String productivity = new DecimalFormat("##.##").format(sum / 168 * 100);
-
         return productivity;
     }
 
     // change these variables to modify program
-    private String dateStart = "1/24/2016";
-    private String dateEnd = "1/31/2016";
-
-    private String wantedCalendars[] = new String[]{"Class", "Homework & Studying", "Job Searching", "Jobs, Internships, & Activities"};
-
-    private String[] cat1 = 
-            new String[]{"CS 169", "Geog 130", "UGBA 101A", "UGBA 102B", "UGBA 155",
-                         "CSM", "Projects", "Languages"};
-    private String[][] cat2 = 
-            new String[][]{{"169"}, {"geog", "130"}, {"101a", "micro", "econ"}, {"102b", "accounting"}, {"155", "leadership"},
-                           {"csm", "CSM"}, {"calendar", "hack", "project", "tq", "software", "productivity"}, {"french", "spanish", "language", "duolingo"}};
-    // private String[][] cat1 = 
-    //         new String[][]{{"Homework"}, {"Homework & Studying"}, 
-    //                        { {"CS 160", "160"}, {"EE 375", "375"}, {"IEOR 186", "ieor, IEOR, 186"}, 
-    //                        {"UGBA 103", "103, finance"}, {"UGBA 107", "107, ethics"}, {"UGBA 167", "167, branding"}};
-    // private String[][] cat2 = 
-    //         new String[][]{{"Projects"}, {"Jobs, Internships & Activities"}, 
-    //                        { {"CSM", "csm, CSM, exec"}, {"CS 61A TA", "61a, staff"}, {"Projects", "calendar, hack, project"}}};
+    private String dateStart = "5/15/2016";
+    private String dateEnd = "5/22/2016";
+    private String wantedCalendars[] = new String[]{"Studying & Learning", "Job Searching", "Work", "Planning"};
+    private String[] categoryTitle = new String[]{"Projects", "Language"};
+    private String[][] categoryFilters = new String[][]{{"productivity", "calendar", "job manager"}, {"language", "korean", "japanese"}};
     
     // Instantiates a new class, CalenTools
     public CalenTools() { }
@@ -200,7 +196,7 @@ public class CalenTools {
         DateTime now = new DateTime(System.currentTimeMillis());
         long startTime = now.getValue();
         int eventCount = 0;
-        miscCategories = calentools.addCategories(calentools.cat1, calentools.cat2);
+        miscCategories = calentools.addCategories(calentools.categoryTitle, calentools.categoryFilters);
 		
         String pageToken = null;
 		do {
@@ -251,30 +247,25 @@ public class CalenTools {
             // Summarize the hours within each calendar
             System.out.println("---- Here is Your Calendar Summary of Week " + calentools.dateStart + "-" + calentools.dateEnd + "! ----");
             for (String calendar : calendarToHour.keySet()) {
-                String productivity = new DecimalFormat("##.##").format(calendarToHour.get(calendar) / 168 * 100);
-                System.out.println(calendar + ": " + calendarToHour.get(calendar) + " | " + productivity + "%");
-            } System.out.println("");
-
-            // Summarize the hours within new categories given by the user
-            System.out.println("---- Here is Your Category Summary of the Past Week! ----");
+                double amount = calendarToHour.get(calendar);
+                String productivity = new DecimalFormat("##.##").format(amount / 168 * 100);
+                System.out.println(calendar + calentools.generateSpaces(44, calendar) + amount + calentools.generateSpaces(6, String.valueOf(amount)) + productivity + "%");
+            };
+            // categories, or things that are also not calendars themselves
             for (String cat : categoryToHour.keySet()) {
-                String productivity = new DecimalFormat("##.##").format(categoryToHour.get(cat) / 168 * 100);
-                System.out.println(cat + ": " + categoryToHour.get(cat) + " | " + productivity + "%");
-            } System.out.println("");
+                double amount = categoryToHour.get(cat);
+                String productivity = new DecimalFormat("##.##").format(amount / 168 * 100);
+                System.out.println(cat + calentools.generateSpaces(44, cat) + amount + calentools.generateSpaces(6, String.valueOf(amount)) + productivity + "%");
+            };
 
-            // Summarizes producitivity
-            System.out.println("---- Here is Your Total Productivity Figures of the Past Week! ----");
-            System.out.println("Total Productivity Percentage: " + calentools.totalsCalendars(calentools.wantedCalendars, calendarToHour) + "%");
-            System.out.println("");
+            // Summarizes productivity
+            System.out.println("You were productive " + calentools.totalsCalendars(calentools.wantedCalendars, calendarToHour) + "% of the time.");
 
             // Displays how long it took for the program to run
-            System.out.println("---- Here is Some Statistics about the Program! ----");
             long endTime = System.currentTimeMillis();
             double totalTime = (double) (endTime - startTime) / 1000.0;
             int rate = (int) (eventCount / totalTime);
-            System.out.println("Was " + totalTime + " seconds.");
-            System.out.println("Counted " + eventCount + " events.");
-            System.out.println("That's ~" + rate + " events per second.");
+            System.out.println("This took " + totalTime + " seconds for " + eventCount + " events. That's ~" + rate + " events per second.");
             
             pageToken = calendarList.getNextPageToken();
 

@@ -16,3 +16,7 @@ dependencies {
     compile 'com.google.apis:google-api-services-calendar:v3-rev125-1.20.0'
     
 }
+
+tasks.withType(JavaCompile){
+    options.warnings = false
+}
