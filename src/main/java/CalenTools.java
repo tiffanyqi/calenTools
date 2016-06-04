@@ -33,25 +33,26 @@ import java.util.List;
 public class CalenTools {
 
     // change these variables to modify program
-    private String dateStart = "5/15/2016";
-    private String dateEnd = "5/22/2016";
-    private String productiveAreas[] = 
+    private String dateStart = "5/29/2016";
+    private String dateEnd = "6/5/2016";
+    private String productives[] = 
         new String[]{"Studying & Learning", "Job Searching", "Work", "Planning"};
     private String[] categoryTitle = new String[]{"Projects", "Language"};
     private String[][] categoryFilters = 
-        new String[][]{{"productivity", "calentools", "job manager"}, {"language", "korean", "japanese"}};
+        new String[][]{{"productivity", "calentools", "job manager"}, 
+        {"language", "korean", "japanese"}};
     
     // Instantiates a new class, CalenTools
     public CalenTools() { }
 
     public static void main(String[] args) throws IOException {
-        // Build a new authorized API client service. Not the calendar.model.Calendar class.
+        // Build a new authorized API client service. Not calendar.model.Calendar class.
         com.google.api.services.calendar.Calendar service =
             getCalendarService();
 
         // sets up the application
         CalenTools c = new CalenTools();
-        HashMap<String, Double> calendarToHour = new HashMap<>();
+        HashMap<String, Double> calToHour = new HashMap<>();
         HashMap<String, Double> categoryToHour = new HashMap<>();
         HashMap<String, HashSet<String>> miscCategories; // a mapping from category name to what it contains
         
@@ -65,28 +66,28 @@ public class CalenTools {
             CalendarList calendarList = service.calendarList().list().setPageToken(pageToken).execute();
             List<CalendarListEntry> items = calendarList.getItems();
 
-            // adds miscellaneous categories to the calendar map
+            // adds miscellaneous categories to the category map
             for (String cat : miscCategories.keySet()) {
                 categoryToHour.put(cat, 0.0);
             }
             
             // iterates through all the calendars
             for (CalendarListEntry calendarListEntry : items) {
-                if (!calendarListEntry.isPrimary()) {
                     
-                    // sets a list of events from a particular calendar
-                    Events events = service.events().list(calendarListEntry.getId())
-                        .setTimeMin(c.setDate(c.dateStart))
-                        .setTimeMax(c.setDate(c.dateEnd))
-                        .setOrderBy("startTime")
-                        .setSingleEvents(true)
-                        .execute();
-                    List<Event> calendarItems = events.getItems();
-                    
-                    double calendarTime = 0; // total amount of time in the calendar
-                    double categoryTime = 0; // total amount of tine in a category
-                    for (Event e : calendarItems) {
-                        // adds up all the durations from events
+                // sets a list of events from a particular calendar
+                Events events = service.events().list(calendarListEntry.getId())
+                    .setTimeMin(c.setDate(c.dateStart))
+                    .setTimeMax(c.setDate(c.dateEnd))
+                    .setOrderBy("startTime")
+                    .setSingleEvents(true)
+                    .execute();
+                List<Event> calendarItems = events.getItems();
+                
+                double calendarTime = 0; // total amount of time in the calendar
+                double categoryTime = 0; // total amount of tine in a category
+                for (Event e : calendarItems) {
+                    // adds up all the durations from events
+                    if (e.getStart().getDateTime() != null) {
                         long start = e.getStart().getDateTime().getValue();
                         long end = e.getEnd().getDateTime().getValue();
                         double eventDuration = ((double) end - start) / 1000 / 60 / 60;
@@ -102,14 +103,16 @@ public class CalenTools {
                                 }
                             }
                         } eventCount += 1;
-                    } calendarToHour.put(calendarListEntry.getSummary(), calendarTime);
-                }
+                    }
+
+                } calToHour.put(calendarListEntry.getSummary(), calendarTime);
             }
 
             // Summarize the hours within each calendar
-            System.out.println("---- Here is Your Summary of Week " + c.dateStart + "-" + c.dateEnd + "! ----");
-            for (String calendar : calendarToHour.keySet()) {
-                double amount = calendarToHour.get(calendar);
+            System.out.print("---- Here is Your Summary of Week ");
+            System.out.println(c.dateStart + "-" + c.dateEnd + "! ----");
+            for (String calendar : calToHour.keySet()) {
+                double amount = calToHour.get(calendar);
                 String productivity = new DecimalFormat("##.##").format(amount / 168 * 100);
                 System.out.println(calendar + c.spaces(40, calendar) + amount + c.spaces(7, String.valueOf(amount)) + productivity + "%");
             };
@@ -121,13 +124,15 @@ public class CalenTools {
             };
 
             // Summarizes productivity
-            System.out.println("You were productive " + c.totalsCalendars(c.productiveAreas, calendarToHour) + "% of the time.");
+            System.out.print("You were productive ");
+            System.out.println(c.sumCals(c.productives, calToHour) + "% of the time.");
 
             // Displays how long it took for the program to run
             long endTime = System.currentTimeMillis();
             double totalTime = (double) (endTime - startTime) / 1000.0;
             int rate = (int) (eventCount / totalTime);
-            System.out.println("This took " + totalTime + " seconds for " + eventCount + " events. That's ~" + rate + " events per second.");
+            System.out.print("This took " + totalTime + " seconds for ");
+            System.out.println(eventCount + " events. That's ~" + rate + " events per second.");
             
             pageToken = calendarList.getNextPageToken();
 
@@ -209,17 +214,17 @@ public class CalenTools {
     /**
      * Adds categories for further segmentation.
      * @input  a string array of category names 
-     * @input  a 2d string array of possible contained names
-     * @return HashMap, a mapping of category title to possible contained names
+     * @input  a 2d string array of possible key words
+     * @return HashMap, a mapping of category title to possible key words
      */
-    public HashMap<String, HashSet<String>> addCategories(String[] categories, String[][] contains) {
-        if (categories.length != contains.length) {
+    public HashMap<String, HashSet<String>> addCategories(String[] categories, String[][] words) {
+        if (categories.length != words.length) {
             System.out.println("Please check your two inputs! Lengths are not equal.");
             return null;
         } else {
             HashMap<String, HashSet<String>> cat = new HashMap<>();
             for (int i = 0; i < categories.length; i++) {
-                HashSet<String> set = new HashSet<String>(Arrays.asList(contains[i]));
+                HashSet<String> set = new HashSet<String>(Arrays.asList(words[i]));
                 cat.put(categories[i], set);
             }
             return cat;
@@ -265,7 +270,7 @@ public class CalenTools {
         return new String(new char[numCharacters-name.length()]).replace("\0", " ");
     }
 
-    public String totalsCalendars(String[] calendars, HashMap<String, Double> map) {
+    public String sumCals(String[] calendars, HashMap<String, Double> map) {
         double sum = 0;
         for (String calendar : calendars) {
             if (map.containsKey(calendar)) {
